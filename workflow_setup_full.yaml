@@ -1,0 +1,14 @@
+---
+
+# stop all
+- import_playbook: do_stop_all.yaml
+
+- import_playbook: workflow_install.yaml
+
+- import_playbook: workflow_setup_clustering.yaml
+
+# configure gateway settings
+- import_playbook: configure_apigateway_settings.yaml
+
+# stop all and start all
+- import_playbook: workflow_restart.yaml

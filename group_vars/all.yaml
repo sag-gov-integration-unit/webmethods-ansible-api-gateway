@@ -1,0 +1,41 @@
+---
+
+## value used by the get-inventory-hosts role in order to fetch the right inventory host value
+inventory_hosts_property: "ansible_host"
+inventory_hosts_clear_first: true
+
+# type of artifact copy
+artifacts_copy_type: s3
+
+# aws buckets to access to pull the install artifacts
+webmethods_s3repo_bucket_name: "{{ lookup('env', 'WM_REPO_AWS_S3_BUCKET') }}"
+webmethods_s3repo_bucket_prefix: "{{ lookup('env', 'WM_REPO_AWS_S3_BUCKET_PREFIX') }}"
+webmethods_user_aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+webmethods_user_aws_secret_key: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+webmethods_user_aws_default_region: "{{ lookup('env', 'AWS_DEFAULT_REGION') | default('us-east-1',true) }}"
+webmethods_user_aws_default_output: "{{ lookup('env', 'AWS_DEFAULT_OUTPUT') | default('json',true) }}"
+
+webmethods_license_apigw_s3_path: "{{ lookup('env', 'WM_REPO_AWS_S3_PATH_LICENSE_APIGW') }}"
+webmethods_license_microgw_s3_path: "{{ lookup('env', 'WM_REPO_AWS_S3_PATH_LICENSE_MICROGW') }}"
+webmethods_license_terracotta_s3_path: "{{ lookup('env', 'WM_REPO_AWS_S3_PATH_LICENSE_TERRACOTTA') }}"
+webmethods_license_apiportal_s3_path: "{{ lookup('env', 'WM_REPO_AWS_S3_PATH_LICENSE_APIPORTAL') }}"
+
+## the defaults S3 values to use if the file descriptor dictionary does not contain an optional variable
+# bucket name / prefix are usually an environment specific variable, so it should usually be defined in the env specific configs
+getfroms3_defaults_bucket_name: "{{ webmethods_s3repo_bucket_name }}"
+getfroms3_defaults_bucket_prefix: "{{ webmethods_s3repo_bucket_prefix }}"
+getfroms3_defaults_local_path_owner_user:
+getfroms3_defaults_local_path_owner_group:
+getfroms3_defaults_local_path_permission: "0644"
+getfroms3_defaults_local_path_create_dir_ifnotexist: true
+getfroms3_defaults_local_path_create_dir_owner_user:
+getfroms3_defaults_local_path_create_dir_owner_group:
+getfroms3_defaults_local_path_create_dir_permission: "0755"
+getfroms3_defaults_force_download: false
+getfroms3_defaults_throttle: 10
+
+##################### async jobs defaults
+common_async_retries: 240
+common_async_delay: 10
+common_async_timeout: 2400
+common_async_poll: 0

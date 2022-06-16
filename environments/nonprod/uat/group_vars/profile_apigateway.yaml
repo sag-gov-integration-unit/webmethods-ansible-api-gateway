@@ -1,0 +1,445 @@
+---
+
+################### runtime params
+
+webmethods_runtime_mem_min: 8192
+webmethods_runtime_mem_max: 8192
+webmethods_runtime_params:
+  wrapper.java.additional.400: "-XX:+PrintAdaptiveSizePolicy"
+  wrapper.java.additional.401: "-XX:+PrintGC"
+  wrapper.java.additional.402: "-XX:+PrintGCCause"
+  wrapper.java.additional.403: "-XX:+PrintGCDetails"
+  wrapper.java.additional.404: "-XX:+PrintGCTimeStamps"
+  wrapper.java.additional.405: "-XX:+PrintGCDateStamps"
+  wrapper.java.additional.406: "-XX:+PrintTenuringDistribution"
+  wrapper.java.additional.407: "-XX:+UseGCLogFileRotation"
+  wrapper.java.additional.408: "-XX:GCLogFileSize=10M"
+  wrapper.java.additional.409: "-XX:NumberOfGCLogFiles=5"
+  wrapper.java.additional.410: "-Xbootclasspath/a:\"%JAVA_BOOT_CLASSPATH%\""
+  wrapper.java.additional.411: "-Xloggc:%OSGI_INSTALL_AREA%/logs/gc_agw.log"
+  wrapper.java.additional.412: "-verbose:gc"
+  wrapper.java.additional.500: "-XX:+DisableExplicitGC"
+  wrapper.java.additional.501: "-Xmn4g"
+
+## watt params settings (note: these are replicated in the cluster after a restart...ie. this needs to be applied on all the nodes if you want to apply directly)
+webmethods_watt_params:
+  watt.net.timeout: 600
+  watt.server.threadPool: 1200
+  watt.server.threadPoolMin: 300
+  watt.server.control.serverThreadThreshold: 50
+
+## extended settings - apigateway settings (note: this are replicated in the cluster)
+vars_webmethods_apigateway_extended_settings_coregateway_extended_keys:
+
+
+################### elastic comms
+
+webmethods_elastic_comms_proto: http
+webmethods_elastic_comms_port: 9240
+
+################### base urls for APIGw REST API Admin calls
+webmethods_apigateway_base_uri: "http://localhost:5555"
+
+################### DNS for the external load balancer (if any)
+webmethods_apigateway_external_loadbalancer_dns: "sample_external_load_balancer"
+
+################### apigateway internal component configs
+webmethods_apigateway_configs:
+  apigw:
+    elasticsearch:
+      tenantId: apigateway
+      hosts: dynamically_set
+      autostart: false
+      http:
+        keepAlive: true
+        keepAliveMaxConnections: 10
+        keepAliveMaxConnectionsPerRoute: 100
+        connectionTimeout: 1000
+        socketTimeout: 10000
+        maxRetryTimeout: 100000
+      https:
+        enabled: false
+        enforceHostnameVerification: false
+        # keystoreFilepath: "{{ webmethods_apigateway_keystore_filepath }}"
+        # truststoreFilepath: "{{ webmethods_apigateway_truststore_filepath }}"
+        # keystoreAlias: "{{ webmethods_apigateway_keystore_keyalias }}"
+        # keystorePassword: "{{ webmethods_apigateway_keystore_password }}"
+        # truststorePassword: "{{ webmethods_apigateway_truststore_password }}"
+      sniff:
+        enable: false
+        timeInterval: 1000
+      outboundProxy:
+        enabled: false
+        alias: somealias
+      clientHttpResponseSize: 1001231
+    kibana:
+      dashboardInstance: http://localhost:9405
+      autostart: true
+
+################### apigateway configuration settings
+
+# enable / disable the config items
+vars_webmethods_apigateway_usermgt_enabled: "true"
+vars_webmethods_apigateway_portalgateway_enabled: "true"
+vars_webmethods_apigateway_archive_imports_enabled: "true"
+vars_webmethods_apigateway_aliases_enabled: "true"
+vars_webmethods_apigateway_ports_enabled: "true"
+vars_webmethods_apigateway_ldap_enabled: "true"
+vars_webmethods_apigateway_saml_enabled: "true"
+vars_webmethods_apigateway_loadbalancer_enabled: "true"
+vars_webmethods_apigateway_promotions_stages_enabled: "true"
+vars_webmethods_apigateway_extended_settings_enabled: "true"
+vars_webmethods_apigateway_plans_enabled: "true"
+vars_webmethods_apigateway_packages_enabled: "true"
+vars_webmethods_apigateway_applications_enabled: "true"
+vars_webmethods_apigateway_apis_publish_groups_enabled: "true"
+vars_webmethods_apigateway_packages_publish_groups_enabled: "true"
+
+# default ignore errors (defaults to false)
+vars_webmethods_apigateway_default_ignore_errors: "true"
+
+# ignore errors or not for each of the config items (defaults to vars_webmethods_apigateway_default_ignore_errors)
+vars_webmethods_apigateway_usermgt_ignore_errors: "false"
+vars_webmethods_apigateway_portalgateway_ignore_errors: "true"
+vars_webmethods_apigateway_archive_imports_ignore_errors: "false"
+vars_webmethods_apigateway_aliases_ignore_errors: "false"
+vars_webmethods_apigateway_ports_ignore_errors: "false"
+vars_webmethods_apigateway_ldap_ignore_errors: "false"
+vars_webmethods_apigateway_saml_ignore_errors: "false"
+vars_webmethods_apigateway_loadbalancer_ignore_errors: "false"
+vars_webmethods_apigateway_promotions_stages_ignore_errors: "false"
+vars_webmethods_apigateway_extended_settings_ignore_errors: "false"
+vars_webmethods_apigateway_plans_ignore_errors: "false"
+vars_webmethods_apigateway_packages_ignore_errors: "false"
+vars_webmethods_apigateway_applications_ignore_errors: "false"
+vars_webmethods_apigateway_apis_publish_groups_ignore_errors: "true"
+vars_webmethods_apigateway_packages_publish_groups_ignore_errors: "true"
+
+# the env stage
+vars_apigateway_environment_stage: "{{ environment_level }}"
+
+# apigateway target
+vars_apigateway_rest_protocol: "http"
+vars_apigateway_rest_host: "localhost"
+vars_apigateway_rest_port: "5555"
+vars_apigateway_rest_no_check_certs: "true"
+
+# rest login info
+vars_apigateway_rest_login_username: "{{ vault_webmethods_apigateway_adminuser_username }}"
+vars_apigateway_rest_login_password: "{{ vault_webmethods_apigateway_adminuser_password}}"
+vars_apigateway_rest_login_password_old: "{{ vault_webmethods_apigateway_adminuser_password_old}}"
+
+# the host to use for the port validation
+vars_validation_host: "{{ vars_apigateway_rest_host }}"
+
+# the ports to check before doing anything
+vars_validation_ports:
+  - "{{ vars_apigateway_rest_port }}"
+
+# timeout to wait for
+vars_validation_ports_timeout: 300
+
+disable_no_log: true
+
+## api packages to import into gateway
+vars_webmethods_apigateway_archive_imports_from_s3: []
+
+## api aliases to import into gateway
+vars_webmethods_apigateway_aliases:
+  - name: sample_endpoint1
+    description: sample endpoint alias 1
+    type: simple
+    owner: Administrator
+    value: "http://sample_endpoint1"
+    stage: ""
+  - name: sample_endpoint2
+    description: sample endpoint alias 2
+    type: simple
+    owner: Administrator
+    value: "http://sample_endpoint2"
+    stage: ""
+  - name: sample_endpoint3
+    description: sample endpoint alias 3
+    type: simple
+    owner: Administrator
+    value: "http://sample_endpoint3"
+    stage: ""
+
+## local users
+vars_webmethods_apigateway_usermgt_users_sample1_username: "sampleuser1.apiadmin"
+vars_webmethods_apigateway_usermgt_users_sample1_password: "{{ vault_webmethods_apigateway_sampleuser1_password }}"
+
+vars_webmethods_apigateway_usermgt_users_sample2_username: "sampleuser2.apiprovider"
+vars_webmethods_apigateway_usermgt_users_sample2_password: "{{ vault_webmethods_apigateway_sampleuser2_password }}"
+
+vars_webmethods_apigateway_usermgt_users_sample3_username: "sampleuser3.apiuser"
+vars_webmethods_apigateway_usermgt_users_sample3_password: "{{ vault_webmethods_apigateway_sampleuser3_password }}"
+
+vars_webmethods_apigateway_usermgt_users:
+  - loginId: "{{ vars_webmethods_apigateway_usermgt_users_sample1_username }}"
+    firstName: Sample User1
+    lastName: Api Admin
+    password: "{{ vars_webmethods_apigateway_usermgt_users_sample1_password }}"
+    emailAddresses:
+      - "{{ vars_webmethods_apigateway_usermgt_users_sample1_username }}@sample.com"
+    allowDigestAuth: false
+    active: true
+    language: en
+  - loginId: "{{ vars_webmethods_apigateway_usermgt_users_sample2_username }}"
+    firstName: Sample User2
+    lastName: Api Provider
+    password: "{{ vars_webmethods_apigateway_usermgt_users_sample2_password }}"
+    emailAddresses:
+      - "{{ vars_webmethods_apigateway_usermgt_users_sample2_username }}@sample.com"
+    allowDigestAuth: false
+    active: true
+    language: en
+  - loginId: "{{ vars_webmethods_apigateway_usermgt_users_sample3_username }}"
+    firstName: Sample User3
+    lastName: Api User
+    password: "{{ vars_webmethods_apigateway_usermgt_users_sample3_password }}"
+    emailAddresses:
+      - "{{ vars_webmethods_apigateway_usermgt_users_sample3_username }}@sample.com"
+    allowDigestAuth: false
+    active: true
+    language: en
+
+## local user groups (note: the user names will get replaced by their IDs in the real REST request)
+vars_webmethods_apigateway_usermgt_groups:
+  - name: sample-apigateway-admins
+    description: apigateway-admins
+    empty_user_ids: false
+    user_loginids_add:
+      - "{{ vars_webmethods_apigateway_usermgt_users_sample1_username }}"
+  - name: sample-apigateway-providers
+    description: apigateway-providers
+    empty_user_ids: false
+    user_loginids_add:
+      - "{{ vars_webmethods_apigateway_usermgt_users_sample2_username }}"
+  - name: sample-apigateway-users
+    description: apigateway-users
+    empty_user_ids: false
+    user_loginids_add:
+      - "{{ vars_webmethods_apigateway_usermgt_users_sample3_username }}"
+
+## access profiles (note: the group names will get replaced by their IDs in the real REST request, and merged with the groupIds field)
+vars_webmethods_apigateway_usermgt_accessprofiles:
+  - name: sample-apigateway-users-team
+    description: apigateway-users-team description
+    privilege: "10010010010100000001010001"
+    groupnames:
+      - sample-apigateway-users
+    groupIds: []
+    teamAdmin:
+      usernames: []
+      groupnames: []
+  - name: sample-apigateway-providers-team
+    description: apigateway-providers-team description
+    privilege: "111111111111111111111111100"
+    groupnames:
+      - sample-apigateway-providers
+    groupIds: []
+    teamAdmin:
+      usernames: []
+      groupnames: []
+  - name: sample-apigateway-admins-team
+    description: apigateway-admins-team description
+    privilege: "111111111111111111111111111"
+    groupnames:
+      - sample-apigateway-admins
+    groupIds: []
+    teamAdmin:
+      usernames: []
+      groupnames: []
+
+## apigateway custom port types
+vars_webmethods_apigateway_ports_list: []
+
+## load balancers fields
+vars_webmethods_apigateway_loadbalancers_http_urls:
+  - "http://{{ webmethods_apigateway_external_loadbalancer_dns }}"
+vars_webmethods_apigateway_loadbalancers_https_urls:
+  - "https://{{ webmethods_apigateway_external_loadbalancer_dns }}"
+vars_webmethods_apigateway_loadbalancers_websocket_urls:
+  - "ws://{{ webmethods_apigateway_external_loadbalancer_dns }}"
+vars_webmethods_apigateway_loadbalancers_webapp_url: "http://{{ webmethods_apigateway_external_loadbalancer_dns }}"
+
+## apiportal / devportal registration
+vars_webmethods_apigateway_portalgateway_devportal:
+  gatewayName: "API_Gateway_{{ vars_apigateway_environment_stage }}"
+  gatewayDescription: "API Gateway in {{ vars_apigateway_environment_stage }} environment"
+  gatewayUsername: "{{ vault_webmethods_apigateway_adminuser_username }}"
+  gatewayPassword: "{{ vault_webmethods_apigateway_adminuser_password }}"
+  gatewayURL: "http://{{ webmethods_apigateway_external_loadbalancer_dns }}"
+  version: "1.0"
+  stageName: "{{ vars_apigateway_environment_stage }}"
+  published: true
+  externalPortal:
+    endpointTenant: default
+    endpointURL: "http://{{ webmethods_apigateway_external_loadbalancer_dns }}/portal"
+    endpointUsername: "{{ vault_webmethods_devportal_admin_username }}"
+    endpointPassword: "{{ vault_webmethods_devportal_admin_password }}"
+    type: "apiportal"
+
+## api gateway promotion stages
+vars_webmethods_apigateway_promotions_stages: []
+  # - name: "{{ vars_apigateway_environment_stage }}"
+  #   description: "{{ vars_apigateway_environment_stage }} Stage"
+  #   url: "https://apigateway105-repro.clouddemo.saggov.com"
+  #   username: "{{ webmethods_secrets_promotionsmgt_user }}"
+  #   password: "{{ webmethods_secrets_promotionsmgt_password }}"
+  #   keystoreAlias: "{{ webmethods_apigateway_keystore_name }}"
+  #   keyAlias: "{{ webmethods_apigateway_keystore_keyalias }}"
+
+## api gateway connectivity to ldap
+vars_webmethods_apigateway_ldap_settings:
+  ldapConfig:
+    cacheSize: '10'
+    cacheTTL: '60'
+    provider: LDAP
+    ldapDirectoryList:
+    - index: 0
+      url: "{{ webmethods_common_ldap_settings.url }}"
+      principal: "{{ webmethods_common_ldap_settings.auth_username }}"
+      password: "{{ webmethods_common_ldap_settings.auth_password }}"
+      timeout: '5'
+      poolMin: '0'
+      poolMax: '10'
+      useaf: false
+      dnPrefix:
+      dnSuffix:
+      uidProp: "{{ webmethods_common_ldap_settings.users_id_attribute }}"
+      userRootDn: "{{ webmethods_common_ldap_settings.users_root_dn }}"
+      useCaching: false
+      group: API-Gateway-Providers
+      memberAttribute: "{{ webmethods_common_ldap_settings.groups_member_attribute }}"
+      groupIdProperty: "{{ webmethods_common_ldap_settings.groups_id_attribute }}"
+      groupRootDN: "{{ webmethods_common_ldap_settings.groups_root_dn }}"
+    cdsRunning: false
+
+## api gateway saml settings
+vars_webmethods_apigateway_saml_settings: {}
+
+# api plans to add or update
+vars_webmethods_apigateway_plans:
+  - name: gold
+    version: "1.0"
+    deprecated: false
+    isProtected: false
+    policiesNames: []
+    cost:
+      currency:
+      value:
+      duration:
+    quota:
+      enforcementPolicyName: ""
+    protected: false
+  - name: silver
+    version: "1.0"
+    deprecated: false
+    isProtected: false
+    policiesNames: []
+    cost:
+      currency:
+      value:
+      duration:
+    quota:
+      enforcementPolicyName: ""
+    protected: false
+  - name: bronze
+    version: "1.0"
+    deprecated: false
+    isProtected: false
+    policiesNames: []
+    cost:
+      currency:
+      value:
+      duration:
+    quota:
+      enforcementPolicyName: ""
+    protected: false
+
+# api packages to add or update
+# the following attributes with "custom_" will be transformed to corresponding attributes of internal ids:
+# - custom_apiIdsByFilter --> apiIds
+# - custom_planIdsByFilter --> planIds
+# - custom_policyIdsByFilter --> policyIds
+vars_webmethods_apigateway_packages:
+  - name: Sample Pack Complete
+    version: "1.0"
+    deprecated: false
+    custom_apiIdsByFilter:
+      - name: "api1"
+        version: "1.0"
+      - name: "api2"
+        version: "1.0"
+      - name: "api3"
+        version: "1.0"
+    custom_planIdsByFilter:
+      - name: "gold"
+        version: "1.0"
+      - name: "silver"
+        version: "1.0"
+      - name: "bronze"
+        version: "1.0"
+    publishedPortals: []
+    custom_policyIdsByFilter: []
+    active: true
+
+# applications to add or update
+# the following attributes with "names/version" will be transformed to corresponding attributes of internal ids:
+# - custom_registerAPIsByFilter --> triggers the registration apis call
+vars_webmethods_apigateway_applications:
+  - name: Sample api1 Application
+    description: Sample application needing access to the api1 APIs
+    version: "1.0"
+    custom_registerAPIsByFilter:
+      - name: "api1"
+        version: "1.0"
+    contactEmails: []
+    siteURLs: []
+    identifiers:
+      - value:
+          - "{{ vars_webmethods_apigateway_usermgt_users_sample1_username }}"
+        name: Username
+        key: httpBasicAuth
+      - value:
+          - "{{ vars_webmethods_apigateway_usermgt_users_sample2_username }}"
+        name: Username
+        key: httpBasicAuth
+      - value:
+          - "{{ vars_webmethods_apigateway_usermgt_users_sample3_username }}"
+        name: Username
+        key: httpBasicAuth
+    consumingAPIs: []
+    isSuspended: false
+    jsOrigins: []
+    authStrategyIds: []
+    restrictViewAsset: false
+    teams: []
+
+# APIs to publish
+# each list item will publish a list of APIs to a list of communities using the same portalGatewayId
+vars_webmethods_apigateway_apis_publish_groups:
+  - lookup_portalGatewayId:
+      name: "API_Gateway_{{ vars_apigateway_environment_stage }}"
+      version: "1.0"
+      stageName: "{{ vars_apigateway_environment_stage }}"
+    lookup_communityIds:
+      - name: "Public Community"
+    lookup_apiIds:
+      - name: "api1"
+        version: "1.0"
+
+# API Packages to publish
+# each list item will publish a list of Packages to a list of communities using the same portalGatewayId
+vars_webmethods_apigateway_packages_publish_groups:
+  - lookup_portalGatewayId:
+      name: "API_Gateway_{{ vars_apigateway_environment_stage }}"
+      version: "1.0"
+      stageName: "{{ vars_apigateway_environment_stage }}"
+    lookup_communityIds:
+      - name: "Public Community"
+    lookup_packageIds:
+      - name: Sample Pack Complete
+        version: "1.0"

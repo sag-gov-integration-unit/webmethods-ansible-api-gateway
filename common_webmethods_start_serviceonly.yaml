@@ -1,0 +1,34 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: "{{ inventory_hosts_pattern }}"
+    filter_unreachable_result_host_group: inventory_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: inventory_filtered_hosts
+    
+################################################################
+## service start
+################################################################
+
+- name: start using systemd services
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: inventory_filtered_hosts
+    command_action: start
+    command_type: service
+    
+################################################################
+## post start checking
+################################################################
+
+- name: Check the ports to ensure valid final state
+  import_playbook: common-webmethods-portscheck.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: inventory_filtered_hosts

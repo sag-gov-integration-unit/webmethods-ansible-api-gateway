@@ -1,0 +1,74 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+############################
+## Update products
+############################
+
+- name: stop command using native or services
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    command_action: stop
+    command_type: raw
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+    ignore_service_notfound: true
+
+## copy sum artifacts
+- import_playbook: copy_sum_artifacts.yaml
+
+## Actual Patching
+- name: Patch the products
+  hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+  
+    - import_role:
+        name: install-sum
+      vars:
+        rvar_install_sum_descriptor: "{{ webmethods_install_sum_descriptor }}"
+      tags:
+        - install_sum
+
+    - import_role:
+        name: patch-with-sum
+      vars:
+        rvar_sum_patching_descriptor_list: "{{ webmethods_install_patches_descriptor_list }}"
+      tags:
+        - install_fixes
+
+################################################################
+## make sure products are not running at the end
+################################################################
+
+## stop spm
+- name: stop the SPM process started outside of systemd
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+    ignore_service_notfound: true
+    command_action: stop
+    command_type: raw
+    webmethods_product_list:
+      - product_name: "spm"
+
+## stop product
+- name: stop the processes using raw commands in case the patch process started any process outside systemd
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+    ignore_service_notfound: true
+    command_action: stop
+    command_type: raw

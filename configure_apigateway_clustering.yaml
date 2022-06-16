@@ -1,0 +1,49 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: apigateway
+    filter_unreachable_result_host_group: apigateway_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: apigateway_filtered_hosts
+
+################################################################
+## playbook content
+################################################################
+
+- name: Setting up API gateway Node for State Clustering with Ignite + External Elastic Search
+  hosts: apigateway_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+    
+    ## get the connect string for the elasticsearch in the format that's expected
+    - import_role:
+        name: apigateway-files-configurator
+      vars:
+        configs_action: get_extconfig_apidatastore_connect_string
+        rvar_apigateway_apidatastore_connect_inventory_pattern: apidatastore
+        rvar_apigateway_apidatastore_connect_port: 9240
+
+    ## get the connect string for the terracotta in the format that's expected
+    - import_role:
+        name: apigateway-files-configurator
+      vars:
+        configs_action: get_extconfig_terracotta_connect_string
+        rvar_apigateway_terracotta_connect_inventory_pattern: terracotta
+        rvar_apigateway_terracotta_connect_port: 9510
+
+    ## set configs
+    - import_role:
+        name: apigateway-files-configurator
+      vars:
+        configs_action: set_externalconfigs
+        rvar_configapigateway_externalconfigs: "{{ webmethods_apigateway_configs }}"
+        rvar_apidatastore_connect_string: "{{ rout_apigateway_apidatastore_connect_string }}"
+        rvar_terracotta_connect_string: "{{ rout_apigateway_terracotta_connect_string }}"

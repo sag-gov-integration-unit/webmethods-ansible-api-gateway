@@ -1,0 +1,33 @@
+---
+
+### Check_Service_Running: Enforce that the service is started, and that the ports are accessible from command central server
+### minimum params:
+### webmethods_inventory_hosts_pattern (type: string - the target ansible group to install the CCE template)
+### webmethods_validation_ports (type: list)
+### webmethods_validation_ports_timeout (type: number)
+### webmethods_validation_ports_delay (type: number)
+
+- name: Check for listening ports, and fail if not expected
+  hosts: "{{ webmethods_inventory_hosts_pattern }}"
+  become: true
+  tasks:
+    - name: Print the params for the common-webmethods-portscheck tasks
+      debug:
+        msg: 
+        - "Common webMethods Check_Service_Running tasks with params:"
+        - "webmethods_inventory_hosts_pattern = {{ webmethods_inventory_hosts_pattern | default('undefined') }}"
+        - "webmethods_validation_ports = {{ webmethods_validation_ports | default('undefined') }}"
+        - "webmethods_validation_ports_timeout = {{ webmethods_validation_ports_timeout | default('300', true) }}"
+        - "webmethods_validation_ports_delay = {{ webmethods_validation_ports_delay | default('0', true) }}"
+        verbosity: 1
+
+    - name: Wait for validation ports to become open on the host, don't start checking for {{ webmethods_validation_ports_delay | default('0', true) }} seconds
+      wait_for:
+        host: "localhost"
+        port: "{{ item }}"
+        delay: "{{ webmethods_validation_ports_delay | default('0', true) }}"
+        timeout: "{{ webmethods_validation_ports_timeout | default('300', true) }}"
+      with_items: "{{ webmethods_validation_ports }}"
+      when: webmethods_validation_ports is defined and (webmethods_validation_ports|length > 0)
+  tags:
+    - port_check

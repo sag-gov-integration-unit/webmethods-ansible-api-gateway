@@ -1,0 +1,55 @@
+########################################### global
+
+[all_linux:children]
+apigateway
+apidatastore
+terracotta
+
+[all_webmethods:children]
+apigateway
+apidatastore
+terracotta
+
+########################################### functions profiles
+
+[profile_apidatastore:children]
+profile_apidatastore_coord
+profile_apidatastore_data
+
+[profile_apidatastore_data:children]
+apidatastore_data
+
+[profile_apidatastore_coord:children]
+apidatastore_coord
+
+[profile_apigateway:children]
+apigateway
+
+[profile_apiportal:children]
+apiportal
+
+[profile_terracotta:children]
+terracotta
+
+########################################### servers
+
+[apigateway]
+apigateway_1 ansible_host=apigw1.apimgt.local
+apigateway_2 ansible_host=apigw2.apimgt.local
+
+[apidatastore:children]
+apidatastore_coord
+apidatastore_data
+
+[apidatastore_data]
+[apidatastore_coord]
+apidatastore_coord_1 ansible_host=apids1.apimgt.local
+apidatastore_coord_2 ansible_host=apids2.apimgt.local
+apidatastore_coord_3 ansible_host=apids3.apimgt.local
+
+[apiportal]
+apiportal_1 ansible_host=apipt1.apimgt.local
+
+[terracotta]
+terracotta_1 ansible_host=terracotta1.apimgt.local
+terracotta_2 ansible_host=terracotta2.apimgt.local

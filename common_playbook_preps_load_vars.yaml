@@ -1,0 +1,20 @@
+---
+
+################################################################
+## Prep - load the needed secrets / ad-hoc var files
+################################################################
+
+- name: Load vars
+  hosts: "{{ webmethods_inventory_hosts_pattern }}"
+  tasks:
+    - name: Loading vars from files
+      debug:
+        var: webmethods_var_files
+        verbosity: 2
+
+    - name: Include all vars files
+      include_vars:
+        file: "{{ item }}"
+      with_fileglob: "{{ webmethods_var_files }}"
+  tags:
+    - always

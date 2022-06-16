@@ -1,0 +1,61 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+################################################################
+## create systemd
+################################################################
+
+# first, stop all
+- import_playbook: do_stop.yaml
+  vars:
+    ignore_script_notfound: true
+
+- import_playbook: do_stop_systemd.yaml
+  vars:
+    ignore_service_notfound: true
+
+# remove systemd and files
+- name: create product services
+  hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  tasks:
+
+    - name: Deleting the systemd services
+      include_role:
+        name: service-webmethods
+        apply:
+          ignore_errors: yes
+      vars:
+        product_command: "delete"
+        ignore_service_notfound: true
+        product_name: "{{ outer_item.product_name }}"
+        product_instance_name: "{{ outer_item.product_instance_name | default('', true) }}"
+        service_user: "{{ webmethods_user }}"
+        service_group: "{{ webmethods_group }}"
+      with_items: "{{ webmethods_product_list }}"
+      loop_control:
+        loop_var: outer_item
+      when: webmethods_product_list is defined and (webmethods_product_list|length > 0)
+
+    - name: Delete softwareag directory
+      shell: /bin/rm -rf {{ delete_item }}
+      with_items:
+        - "{{ webmethods_install_dir }}/*"
+        - "{{ webmethods_install_sum_dir }}/*"
+        - "{{ webmethods_localrepo_target_dir }}/*"
+        - "{{ webmethods_install_common_repo_dir }}/*"
+      loop_control:
+        loop_var: delete_item
+      ignore_errors: yes

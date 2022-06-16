@@ -1,0 +1,116 @@
+---
+
+### common-webmethods-commandstop: Stop the processes using the native command scripts
+### minimum params:
+### webmethods_inventory_hosts_pattern (type: string - the target ansible group to install the CCE template)
+### webmethods_product_list (type: list - the products installed by the template so we can create the right services etc...)
+### command_action (type: string - any of value ['stop','start','restart'])
+### command_type (type: string - any of value ['raw','service','both'])
+## format:
+# webmethods_product_list:
+#   - product_name: "product1"
+#     product_instance_name: "product_instance1"
+#   - product_name: "product2"
+#     product_instance_name: "product_instance2"
+
+- hosts: "{{ webmethods_inventory_hosts_pattern }}"
+  become: true
+  tasks:
+
+    - name: Set command_type default
+      set_fact:
+        command_type: "raw"
+      when: command_type is not defined
+    
+    - name: Set command_action default
+      set_fact:
+        command_action: ""
+      when: command_action is not defined
+    
+    - name: Print the raw params for the webMethods common-webmethods-commandstop tasks
+      debug:
+        msg: 
+        - "common-webmethods-commandstop tasks with params:"
+        - "webmethods_inventory_hosts_pattern = {{ webmethods_inventory_hosts_pattern | default('undefined') }}"
+        - "webmethods_product_list = {{ webmethods_product_list | default('undefined') }}"
+        - "command_action = {{ command_action | default('undefined') }}"
+        - "command_type = {{ command_type | default('undefined') }}"
+        verbosity: 1
+
+    - name: fail if command_action not valid
+      fail: 
+        msg: "command_action value {{ command_action | default('undefined') }} is not valid...cannot do anything."
+      when: command_action not in ["stop","start","restart"]
+
+    - name: fail if command_type not valid
+      fail: 
+        msg: "command_type value {{ command_type | default('undefined') }} is not valid...cannot do anything."
+      when: command_type not in ["raw","service","both"]
+
+    - name: special restart handling
+      block:
+
+        - name: special restart handling - Action using os service (ie. systemd)
+          include_role: 
+            name: service-webmethods
+            apply:
+              become: true
+          vars:
+            product_command: "stop"
+            product_name: "{{ item.product_name }}"
+            product_instance_name: "{{ item.product_instance_name | default('', true) }}"
+            service_user: "{{ webmethods_user }}"
+            service_group: "{{ webmethods_group }}"
+          with_items: "{{ webmethods_product_list }}"
+          when: command_type == "service" or command_type == "both" 
+
+        - name: special restart handling - Action using the native command scripts
+          include_role: 
+            name: command-webmethods
+            apply:
+              become: true
+              become_user: "{{ webmethods_user }}"
+          vars:
+            product_command: "stop"
+            product_name: "{{ item.product_name }}"
+            product_instance_name: "{{ item.product_instance_name | default('', true) }}"
+          with_items: "{{ webmethods_product_list }}"
+          when: command_type == "raw" or command_type == "both" 
+        
+        - name: Set command_action to start
+          set_fact:
+            command_action: "start"
+    
+      when: command_action in ["restart"]
+
+    - name: start/stop commands
+      block:
+ 
+        - name: Action using os service (ie. systemd)
+          include_role: 
+            name: service-webmethods
+            apply:
+              become: true
+          vars:
+            product_command: "{{ command_action }}"
+            product_name: "{{ item.product_name }}"
+            product_instance_name: "{{ item.product_instance_name | default('', true) }}"
+            service_user: "{{ webmethods_user }}"
+            service_group: "{{ webmethods_group }}"
+          with_items: "{{ webmethods_product_list }}"
+          when: command_type == "service" or command_type == "both" 
+
+        - name: Action using the native command scripts
+          include_role: 
+            name: command-webmethods
+            apply:
+              become: true
+              become_user: "{{ webmethods_user }}"
+          vars:
+            product_command: "{{ command_action }}"
+            product_name: "{{ item.product_name }}"
+            product_instance_name: "{{ item.product_instance_name | default('', true) }}"
+          with_items: "{{ webmethods_product_list }}"
+          when: command_type == "raw" or command_type == "both" 
+       
+      when: command_action in ["stop","start"]

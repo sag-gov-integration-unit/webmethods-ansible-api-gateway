@@ -1,0 +1,46 @@
+---
+
+################################################################
+## Prep - figure out which hosts are reachable in the group, 
+## and which ones should be ignored if un-reachable
+################################################################
+
+- name: Find out if unreachable hosts should be ignored and which ones should not 
+  hosts: "{{ filter_unreachable_hosts_pattern }}"
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: fail if param not specified
+      fail: 
+        msg: "filter_unreachable_result_host_group not specified...cannot do anything."
+      when: filter_unreachable_result_host_group is not defined or filter_unreachable_result_host_group == ""
+
+    - name: Blindly add hosts with ignore_unreachable=false to the group any_hosts 
+      group_by:
+        key: "{{ filter_unreachable_result_host_group }}_any_hosts"
+      when: (ignore_unreachable | default() | bool) == false
+
+    - name: perform ignore_unreachable check for reachable hosts
+      block:
+        - name: determine hosts that are reachable
+          wait_for_connection:
+            timeout: 5
+          vars:
+            ansible_connection: ssh
+        - name: add all reachable hosts into the reachable_hosts group
+          group_by:
+            key: "{{ filter_unreachable_result_host_group }}_reachable_only_hosts"
+      rescue:
+        - debug: msg="cannot connect to {{ inventory_hostname }}"
+      when: ignore_unreachable | default() | bool
+  tags:
+    - always
+
+- name: Merge the resulting hosts into a single group
+  hosts: "{{ filter_unreachable_result_host_group }}_any_hosts:{{ filter_unreachable_result_host_group }}_reachable_only_hosts"
+  tasks:
+    - name: Merge the resulting hosts into group filtered_unreachable_hosts
+      group_by:
+        key: "{{ filter_unreachable_result_host_group }}"
+  tags:
+    - always

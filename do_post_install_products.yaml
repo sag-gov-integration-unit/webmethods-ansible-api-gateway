@@ -1,0 +1,5 @@
+---
+
+# setup systemd services
+- import_playbook: do_disable_spm.yaml
+- import_playbook: do_systemd_create.yaml

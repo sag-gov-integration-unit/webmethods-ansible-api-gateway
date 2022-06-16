@@ -1,0 +1,31 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+
+############################
+## Copy artifacts
+############################
+
+## AWS S3 method
+- hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+    - name: Downloading install artifacts
+      import_role: 
+        name: aws-wrapper
+      vars:
+        command: get-files-from-s3
+        getfroms3_files_descriptor_list: "{{ webmethods_download_common_product_installer_artifacts_s3 + webmethods_download_products_install_artifacts_s3 }}"

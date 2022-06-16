@@ -1,0 +1,56 @@
+---
+
+## webmethods var files to load
+webmethods_var_files:
+  - "./environments/{{ environment_ecosystem }}/{{ environment_level }}/secrets/vault_all_webmethods.yaml"
+
+## misc file download descriptor
+webmethods_download_files_s3_descriptor: []
+
+## certs
+webmethods_keystore_local_path: "{{ webmethods_install_dir }}/certs/SAGKeystore.jks"
+webmethods_keystore_filename: "{{ webmethods_keystore_local_path | basename }}"
+webmethods_keystore_aliasname: "{{ (webmethods_keystore_filename | splitext)[0] }}"
+webmethods_keystore_type: "JKS"
+webmethods_keystore_provider: "SUN"
+webmethods_keystore_description: "SAG Keystore"
+webmethods_truststore_remote_filename: "SAGTruststore.jks"
+webmethods_truststore_local_path: "{{ webmethods_install_dir }}/certs/SAGTruststore.jks"
+webmethods_truststore_filename: "{{ webmethods_truststore_local_path | basename }}"
+webmethods_truststore_aliasname: "{{ (webmethods_truststore_filename | splitext)[0] }}"
+webmethods_truststore_type: "JKS"
+webmethods_truststore_provider: "SUN"
+webmethods_truststore_description: "SAG Truststore"
+webmethods_secrets_keystore_password: "{{ vault_webmethods_keystore_password }}"
+webmethods_secrets_keystore_keyalias_password: "{{ vault_webmethods_keystore_keyalias_password }}"
+webmethods_secrets_truststore_password: "{{ vault_webmethods_truststore_password }}"
+
+## specific download descriptor for certs
+webmethods_certs_download_descriptor:
+  - bucket_path: "customer_specifics/configurations/{{ webmethods_keystore_remote_filename }}"
+    local_path: "{{ webmethods_keystore_local_path }}"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: true
+    local_path_create_dir_permission: "0700"
+    force_download: "true"
+  - bucket_path: "customer_specifics/configurations/{{ webmethods_truststore_remote_filename }}"
+    local_path: "{{ webmethods_truststore_local_path }}"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: true
+    local_path_create_dir_permission: "0700"
+    force_download: "true"
+
+## LDAP settings
+## Careful: attribute names are case sensitive for some products (ie. api portal?)...
+## make sure to use the right case to avoid issues.
+webmethods_common_ldap_settings:
+  url: "ldap://someldap.local:389"
+  auth_username: "{{ vault_webmethods_ldap_auth_principal }}"
+  auth_password: "{{ vault_webmethods_ldap_auth_password }}"
+  users_root_dn: "OU=users,DC=company,DC=local"
+  # users_id_attribute: "sAMAccountName"
+  users_id_attribute: "userPrincipalName"
+  users_memberof_attribute: "memberOf"
+  groups_root_dn: "OU=groups,DC=company,DC=local"
+  groups_id_attribute: "cn"
+  groups_member_attribute: "member"

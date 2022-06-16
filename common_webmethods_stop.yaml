@@ -1,0 +1,25 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: "{{ inventory_hosts_pattern }}"
+    filter_unreachable_result_host_group: inventory_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: inventory_filtered_hosts
+    
+################################################################
+## stop
+################################################################
+
+- name: stop using native or services
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: inventory_filtered_hosts
+    command_action: stop
+    command_type: both

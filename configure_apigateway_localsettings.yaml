@@ -1,0 +1,59 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: apigateway
+    filter_unreachable_result_host_group: apigateway_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: apigateway_filtered_hosts
+
+################################################################
+## set configs
+################################################################
+
+## TODO: let's fail if service is UP!
+
+- name: Setting jvm configs
+  hosts: apigateway_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+
+    - name: Set changed flag to false if not defined
+      set_fact:
+        configure_apigateway_jvm_localconfigs_changed: false
+      when: configure_apigateway_jvm_localconfigs_changed is not defined
+    
+    - name: Applying jvm memory
+      import_role:
+        name: apigateway-files-configurator
+      vars:
+        configs_action: set-jvm-memory
+        rvar_jvm_mem_min: "{{ webmethods_runtime_mem_min }}"
+        rvar_jvm_mem_max: "{{ webmethods_runtime_mem_max }}"
+    
+    - name: Applying jvm params
+      import_role:
+        name: apigateway-files-configurator
+      vars:
+        configs_action: set-jvm-params
+        rvar_jvm_params: "{{ webmethods_runtime_params }}"
+    
+    - name: Applying extended-settings for API gateway IS runtime
+      import_role:
+        name: apigateway-files-configurator
+      vars:
+        configs_action: set-extended-settings-isruntime
+        rvar_watt_params: "{{ webmethods_watt_params }}"
+
+    - name: Set changed flag to true if any mutating operation did change
+      set_fact:
+        configure_apigateway_jvm_localconfigs_changed: true
+
+    - debug: var=configure_apigateway_jvm_localconfigs_changed verbosity=2

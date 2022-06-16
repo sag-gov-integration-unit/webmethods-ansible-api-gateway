@@ -1,0 +1,5 @@
+---
+
+- import_playbook: common_webmethods_start_serviceonly.yaml
+  vars:
+    inventory_hosts_pattern: terracotta

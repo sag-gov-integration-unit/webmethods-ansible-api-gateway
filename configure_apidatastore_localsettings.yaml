@@ -1,0 +1,52 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: apidatastore
+    filter_unreachable_result_host_group: apidatastore_filtered_hosts
+    
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: apidatastore_filtered_hosts
+
+################################################################
+## set configs
+################################################################
+
+- name: Setting jvm configs
+  hosts: apidatastore_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+
+    - name: Set changed flag to false if not defined
+      set_fact:
+        configure_apidatastore_jvm_localconfigs_changed: false
+      when: configure_apidatastore_jvm_localconfigs_changed is not defined
+    
+    - name: Applying jvm memory
+      import_role:
+        name: configure-internaldatastore
+      vars:
+        configs_action: set-jvm-memory
+        jvm_heap_min: "{{ webmethods_runtime_mem_min }}"
+        jvm_heap_max: "{{ webmethods_runtime_mem_max }}"
+    
+    - name: Applying jvm params
+      import_role:
+        name: configure-internaldatastore
+      vars:
+        configs_action: set-jvm-params
+        rvar_jvm_params: "{{ webmethods_runtime_params }}"
+
+    - name: Set changed flag to true if any mutating operation did change
+      set_fact:
+        configure_apidatastore_jvm_localconfigs_changed: true
+
+    - debug: var=configure_apidatastore_jvm_localconfigs_changed verbosity=2
+
+    

@@ -1,0 +1,14 @@
+---
+
+## webmethods var files to load
+webmethods_var_files: []
+
+## error if servers are unreachable
+ignore_unreachable: false
+
+## environment globals
+environment_ecosystem: "nonprod"
+environment_level: "uat"
+
+## disable no log ==> should be false in general
+disable_no_log: false

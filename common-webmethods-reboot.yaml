@@ -1,0 +1,44 @@
+---
+
+### minimum params:
+### webmethods_inventory_hosts_pattern (type: string - the target ansible group to execute these tasks on)
+### webmethods_post_reboot_delay (type: number)
+### webmethods_reboot_timeout (type: number)
+
+- name: Reboot the machine
+  hosts: "{{ webmethods_inventory_hosts_pattern }}"
+  become: true
+  tasks:
+    - name: Print the raw incoming params for the common-webmethods-reboot tasks
+      debug:
+        msg: 
+        - "Common webMethods postinstall tasks with params:"
+        - "webmethods_inventory_hosts_pattern = {{ webmethods_inventory_hosts_pattern | default('undefined') }}"
+        - "webmethods_reboot = {{ webmethods_reboot | default('undefined') }}"
+        - "webmethods_reboot_timeout = {{ webmethods_reboot_timeout | default('undefined') }}"
+        - "webmethods_post_reboot_delay = {{ webmethods_post_reboot_delay | default('undefined') }}"
+        verbosity: 1
+        
+    - name: Set defaults from params
+      set_fact:
+        webmethods_reboot: "{{ webmethods_reboot | default(true) }}"
+        webmethods_reboot_timeout: "{{ webmethods_reboot_timeout | default('600', true) }}"
+        webmethods_post_reboot_delay: "{{ webmethods_post_reboot_delay | default('30', true) }}"
+
+    - name: Print the params with default values for the common-webmethods-reboot tasks
+      debug:
+        msg: 
+        - "Common webMethods postinstall tasks with params:"
+        - "webmethods_inventory_hosts_pattern = {{ webmethods_inventory_hosts_pattern | default('undefined') }}"
+        - "webmethods_reboot = {{ webmethods_reboot }}"
+        - "webmethods_reboot_timeout = {{ webmethods_reboot_timeout }}"
+        - "webmethods_post_reboot_delay = {{ webmethods_post_reboot_delay }}"
+        verbosity: 1
+
+    - name: "Reboot the machine ONLY IF webmethods_reboot set to true"
+      reboot:
+        reboot_timeout: "{{ webmethods_reboot_timeout }}"
+        post_reboot_delay: "{{ webmethods_post_reboot_delay }}"
+      when: webmethods_reboot | bool
+      tags:
+        - reboot

@@ -1,0 +1,40 @@
+---
+
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+################################################################
+## create systemd
+################################################################
+
+- name: create product services
+  hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  tasks:
+
+    - name: Creating the services for various components
+      include_role:
+        name: service-webmethods
+      vars:
+        product_command: "create"
+        product_name: "{{ outer_item.product_name }}"
+        product_instance_name: "{{ outer_item.product_instance_name | default('', true) }}"
+        service_autostart: "{{ webmethods_services_autostart }}"
+        force_create: false
+        service_user: "{{ webmethods_user }}"
+        service_group: "{{ webmethods_group }}"
+      with_items: "{{ webmethods_product_list }}"
+      loop_control:
+        loop_var: outer_item
+      when: webmethods_product_list is defined and (webmethods_product_list|length > 0)

@@ -1,0 +1,14 @@
+---
+
+# server sys preps
+- import_playbook: do_sysprep.yaml
+
+# install/patch
+- import_playbook: do_install_products.yaml
+- import_playbook: do_patch_products.yaml
+
+# post install
+- import_playbook: do_post_install_products.yaml
+
+# configure local
+- import_playbook: do_configure_local.yaml

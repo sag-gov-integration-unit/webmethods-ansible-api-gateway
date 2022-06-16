@@ -1,0 +1,5 @@
+---
+
+- import_playbook: do_stop_terracotta.yaml
+- import_playbook: configure_terracotta_clustering.yaml
+- import_playbook: do_start_terracotta.yaml

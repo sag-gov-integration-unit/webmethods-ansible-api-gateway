@@ -1,0 +1,59 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+
+############################
+## Copy artifacts
+############################
+
+##SSH Sync method   
+- hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  tasks:
+    - name: Create dir and set permissions
+      file:
+        path: "{{ item }}"
+        state: directory
+        recurse: no
+        owner: "{{ webmethods_user }}"
+        group: "{{ webmethods_group }}"
+        mode: 0777
+      with_items:
+        - "{{ webmethods_install_common_repo_dir }}"
+
+- hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  become_user: "ec2-user"
+  tasks:
+    
+    - name: Moving install artifacts from file repo to targets
+      import_role: 
+        name: copy-files
+      vars:
+        rvar_filecopy_mode: remote2host
+        rvar_filecopy_remote2host_descriptor_list: "{{ webmethods_download_common_sum_artifacts + webmethods_download_products_sum_artifacts }}"
+
+- hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  tasks:
+    - name: Create dir and set permissions
+      file:
+        path: "{{ filecopy_desc_item.to_path }}"
+        owner: "{{ filecopy_desc_item.to_path_owner }}"
+        group: "{{ filecopy_desc_item.to_path_group }}"
+        mode: "{{ filecopy_desc_item.to_path_permission }}"
+      with_items: "{{ webmethods_download_common_sum_artifacts + webmethods_download_products_sum_artifacts }}"
+      loop_control:
+        loop_var: filecopy_desc_item

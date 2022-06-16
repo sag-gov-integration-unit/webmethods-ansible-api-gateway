@@ -1,0 +1,129 @@
+---
+
+## OS settings
+sys_open_ports: "{{ sys_open_ports_apigateway_all }} + {{ sys_open_ports_terracotta_client_healthcheck_callbacks }} + {{ sys_open_ports_apigatewaykibana_all }}"
+
+## These ports should be added only if CLUSTERED terracotta and internaldatastore are also running on the gateway...which should be rare as it's not best practice
+## {{ sys_open_ports_terracotta }} + {{ sys_open_ports_internaldatastore }}"
+
+limits_user: "{{ webmethods_user }}"
+limits_openfiles: "250000"
+limits_processes: "20000"
+
+sysctl_config:
+  vm.max_map_count: "262144"
+  fs.file-max: "{{ limits_openfiles }}"
+
+################### post install settings
+
+webmethods_product_list:
+  - product_name: "apigateway"
+    product_instance_name: "default"
+
+# the ports to check for a completely valid start of the product
+webmethods_validation_ports:
+  - 5555
+  - 9072
+  - 9999
+  - 9405
+
+# special longer timeout because it can take a while for portal to come up, especially on first initial run
+webmethods_validation_ports_timeout: 600
+
+################### install settings
+
+## Global vars
+webmethods_component: "apigateway"
+webmethods_version: "{{ product_version_full_withdot }}"
+webmethods_fix: "14"
+webmethods_fix_datecreated: "20220413"
+webmethods_install_base_name: softwareag_{{ product_version_full }}_{{ webmethods_component }}_linux_x64
+webmethods_install_ga_name: "{{ webmethods_install_base_name }}_ga"
+webmethods_install_patch_name: "{{ webmethods_install_base_name }}_fixes_{{ webmethods_version }}.{{ webmethods_fix }}_{{ webmethods_fix_datecreated }}"
+
+webmethods_install_license_apigw_s3_path: "{{ webmethods_license_apigw_s3_path }}"
+webmethods_install_license_apigw_local_path_1: "{{ webmethods_install_dir }}/IntegrationServer/config/licenseKey.xml"
+webmethods_install_license_apigw_local_path_2: "{{ webmethods_install_dir }}/IntegrationServer/instances/default/config/licenseKey.xml"
+webmethods_install_license_microgw_s3_path: "{{ webmethods_license_microgw_s3_path }}"
+webmethods_install_license_microgw_local_path: "{{ webmethods_install_dir }}/Microgateway/license.xml"
+webmethods_install_license_terracotta_s3_path: "{{ webmethods_license_terracotta_s3_path }}"
+webmethods_install_license_terracotta_local_path: "{{ webmethods_install_dir }}/common/conf/terracotta-license.key"
+
+######## Product install
+webmethods_install_products_descriptor_list:
+  - target_install_dir: "{{ webmethods_install_dir }}"
+    installer_path: "{{ webmethods_install_common_repo_dir }}/softwareaginstaller.bin"
+    script_path: "{{ webmethods_install_common_repo_dir }}/install.script"
+    binaries_image_path: "{{ webmethods_install_common_repo_dir }}/install_image.zip"
+    clean_after_install: false
+    licenses:
+      - "{{ webmethods_install_common_repo_dir }}/install1.license"
+      - "{{ webmethods_install_common_repo_dir }}/install2.license"
+
+##### Option 2 using S3 download methods to copy artifacts
+webmethods_download_products_install_artifacts_s3:
+  - bucket_path: "product_repo/webmethods/{{ webmethods_version }}/images/{{ webmethods_component }}/installations/{{ webmethods_install_ga_name }}.script.txt"
+    local_path: "{{ webmethods_install_common_repo_dir }}/install.script"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+  - bucket_path: "product_repo/webmethods/{{ webmethods_version }}/images/{{ webmethods_component }}/installations/{{ webmethods_install_ga_name }}.zip"
+    local_path: "{{ webmethods_install_common_repo_dir }}/install_image.zip"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+  - bucket_path: "{{ webmethods_install_license_apigw_s3_path }}"
+    local_path: "{{ webmethods_install_common_repo_dir }}/install1.license"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    force_download: true
+  - bucket_path: "{{ webmethods_install_license_microgw_s3_path }}"
+    local_path: "{{ webmethods_install_common_repo_dir }}/install2.license"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    force_download: true
+
+######## Patch installs
+webmethods_install_patches_descriptor_list:
+  - target_install_dir: "{{ webmethods_install_dir }}"
+    sum_home_dir: "{{ webmethods_install_sum_dir }}"
+    script_path: "{{ webmethods_install_common_repo_dir }}/sumpatch.script"
+    binaries_image_path: "{{ webmethods_install_common_repo_dir }}/sumpatch_image.zip"
+    fixes_overinstall: false
+    sum_selfupdate: false
+    clean_after_install: true
+
+##### Option 2 using S3 download methods to copy artifacts
+webmethods_download_products_sum_artifacts_s3:
+  - bucket_path: "product_repo/webmethods/{{ webmethods_version }}/images/{{ webmethods_component }}/fixes/{{ webmethods_install_patch_name }}.script.txt"
+    local_path: "{{ webmethods_install_common_repo_dir }}/sumpatch.script"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+  - bucket_path: "product_repo/webmethods/{{ webmethods_version }}/images/{{ webmethods_component }}/fixes/{{ webmethods_install_patch_name }}.zip"
+    local_path: "{{ webmethods_install_common_repo_dir }}/sumpatch_image.zip"
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+
+###### product licenses to delete post install...need to transform that var into a simple list
+# TODO: missing microgateway path
+webmethods_install_product_license_descriptor_list_s3:
+  - bucket_path: "{{ webmethods_install_license_apigw_s3_path }}"
+    local_path: "{{ webmethods_install_license_apigw_local_path_1 }}"
+    force_download: "true"
+  - bucket_path: "{{ webmethods_install_license_apigw_s3_path }}"
+    local_path: "{{ webmethods_install_license_apigw_local_path_2 }}"
+    force_download: "true"
+  - bucket_path: "{{ webmethods_install_license_microgw_s3_path }}"
+    local_path: "{{ webmethods_install_license_microgw_local_path }}"
+    force_download: "true"
+  - bucket_path: "{{ webmethods_install_license_terracotta_s3_path }}"
+    local_path: "{{ webmethods_install_license_terracotta_local_path }}"
+    force_download: "true"
+
+########################################################

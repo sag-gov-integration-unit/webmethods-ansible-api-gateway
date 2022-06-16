@@ -1,0 +1,26 @@
+---
+
+################################################################
+## playbook content
+################################################################
+
+- hosts: apidatastore
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+    - import_role: 
+        name: configure-internaldatastore
+      vars:
+        configs_action: set-clustering
+        ids_coordinators_inventory_pattern: apidatastore_coord
+
+## To create a new cluster, we need to clear the data on the master nodes...
+## TODO: this is dangerous if it's re-run on existing cluster where the master nodes are also the data nodes!! I need to do something on this
+- hosts: apidatastore_coord
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+    - import_role: 
+        name: configure-internaldatastore
+      vars:
+        configs_action: clear-cluster-data

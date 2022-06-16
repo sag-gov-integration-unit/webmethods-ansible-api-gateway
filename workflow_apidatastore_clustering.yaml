@@ -1,0 +1,5 @@
+---
+
+- import_playbook: do_stop_apidatastore.yaml
+- import_playbook: configure_apidatastore_clustering.yaml
+- import_playbook: do_start_apidatastore.yaml

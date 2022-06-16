@@ -1,0 +1,81 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_linux
+    filter_unreachable_result_host_group: all_linux_filtered_hosts
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods
+    filter_unreachable_result_host_group: all_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_filtered_hosts:all_webmethods_filtered_hosts
+
+################################################################
+## playbook content
+################################################################
+
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Non Root tasks
+      block:
+        ## this is to make sure we gather the facts again as the user {{ cce_owner }} in order to get a valid {{ ansible_env.HOME }}
+        - setup:
+        - import_role:
+            name: create-known-hosts
+      become: false
+  tags:
+    - sysprep
+    - setup_ansible
+
+- hosts: all_linux_filtered_hosts
+  become: true
+  tasks:
+    - import_role:
+        name: manage-packages
+    - name: make sure firewalld is started
+      service:
+        name: firewalld
+        state: started
+    - import_role:
+        name: update-firewall
+    - import_role:
+        name: update-os-configs
+      vars:
+        allow_reboot: true
+  tags:
+    - sysprep
+    - sysprep_linux
+
+## then create the wM user on all the webmethods server using the public key of the key created above
+- hosts: all_webmethods_filtered_hosts:&all_linux_filtered_hosts
+  become: true
+  roles:
+    - role: create-service-user
+      vars:
+        username: "{{ webmethods_user }}"
+        userid: "{{ webmethods_userid }}"
+        user_description: "{{ webmethods_user_description }}"
+        groupname: "{{ webmethods_group }}"
+        groupid: "{{ webmethods_groupid }}"
+        aws_access_key: "{{ webmethods_user_aws_access_key }}"
+        aws_secret_key: "{{ webmethods_user_aws_secret_key }}"
+        aws_default_region: "{{ webmethods_user_aws_default_region }}"
+        aws_default_output: "{{ webmethods_user_aws_default_output }}"
+    - role: prepare-wminstall
+      vars:
+        install_dir: "{{ webmethods_install_dir }}"
+        install_sum_dir: "{{ webmethods_install_sum_dir }}"
+        install_user: "{{ webmethods_user }}"
+        install_group: "{{ webmethods_group }}"
+  tags:
+    - sysprep
+    - sysprep_webmethods

@@ -1,0 +1,14 @@
+---
+
+################### runtime params
+
+webmethods_runtime_mem_min: 8192
+webmethods_runtime_mem_max: 8192
+webmethods_runtime_params:
+  - "-XX:+DisableExplicitGC"
+
+################### ids setup
+
+ids_node_master: true
+ids_node_data: true
+ids_node_ingest: true

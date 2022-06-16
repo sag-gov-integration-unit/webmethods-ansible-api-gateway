@@ -1,0 +1,35 @@
+---
+
+################################################################
+## terracotta set configs
+################################################################
+
+- hosts: terracotta
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+
+    - name: Set changed flag to false if not defined
+      set_fact:
+        configure_terracotta_clustering_changed: false
+      when: configure_terracotta_clustering_changed is not defined
+
+    - import_role: 
+        name: configure-terracotta
+      vars:
+        configs_action: set-clustering
+        tc_inventory_pattern: terracotta
+    
+    ## TODO: this is dangerous if it's re-run on existing cluster... I need to do something on this
+    - import_role: 
+        name: configure-terracotta
+      vars:
+        configs_action: clear-data
+
+    - name: Set changed flag to true if any mutating operation did change
+      set_fact:
+        configure_terracotta_clustering_changed: true
+      when: >
+        configure_terracotta_set_clustering_changed | default(false,true) | bool
+
+    - debug: var=configure_terracotta_clustering_changed verbosity=2

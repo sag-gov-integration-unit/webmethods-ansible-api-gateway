@@ -1,0 +1,193 @@
+---
+
+##################### User settings
+webmethods_user: saguser
+webmethods_userid: 1724
+webmethods_user_description: "SAG User"
+webmethods_group: saguser
+webmethods_groupid: 1724
+
+##################### versions to install (needed for the services)
+product_version_major: 10
+product_version_minor: 7
+product_version_full: "{{ product_version_major }}{{ product_version_minor }}"
+product_version_full_withdot: "{{ product_version_major }}.{{ product_version_minor }}"
+
+##################### Dirs to use
+webmethods_install_dir: /opt/softwareag
+webmethods_install_sum_dir: /opt/sum
+webmethods_install_common_repo_dir: "{{ webmethods_install_dir }}/install_artifacts"
+
+##################### some defaults timeouts
+
+webmethods_reboot: true
+webmethods_reboot_timeout: 1200
+webmethods_post_reboot_delay: 60
+
+webmethods_validation_ports: []
+webmethods_validation_ports_delay: 2
+webmethods_validation_ports_timeout: 400
+
+webmethods_services_autostart: true
+
+##################### product install / updates #####################
+
+## Mode: remote2host
+## in this mode, the role is actually executed on the "to" target machines, but the rsync operation is actually executed from the "from_host" value
+## what this mean is that the "from_host" server should have the ability to perform rsync over ssh to the target machines...
+_filecopy_mode_remote2host: remote2host
+rvar_filecopy_remote2host_descriptor_list:
+  - from_host: "from_host"
+    from_path: "path/on/repo/host"
+    to_path: "target/path/on/current/hosts"
+  - from_host: "from_host"
+    from_path: "path/on/repo/host"
+    to_path: "target/path/on/current/hosts"
+
+##### Option 2 using S3 download methods to copy artifacts
+
+## Installer download
+webmethods_download_common_product_installer_artifacts_s3:
+  - bucket_path: "product_repo/webmethods/{{ webmethods_version }}/installers/SoftwareAGInstaller20210415-Linux_x86_64.bin"
+    local_path: "{{ webmethods_install_common_repo_dir }}/softwareaginstaller.bin"
+    local_path_permission: "0700"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+
+## Update Manager download
+webmethods_download_common_sum_artifacts_s3:
+  - bucket_path: "product_repo/webmethods/SUMInstallers/SUM_11/20210921/SoftwareAGUpdateManagerInstaller20210921-11-LinuxX86.bin"
+    local_path: "{{ webmethods_install_common_repo_dir }}/softwareagupdatemanager-linux.bin"
+    local_path_permission: "0700"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+  - bucket_path: "product_repo/webmethods/SUMInstallers/SUM_11/images/softwareag_sum11_image_20210715.zip"
+    local_path: "{{ webmethods_install_common_repo_dir }}/sum_image.zip"    
+    local_path_permission: "0600"
+    local_path_create_dir_ifnotexist: "true"
+    local_path_create_dir_permission: "0700"
+    force_download: true
+
+## SUM installer descriptor
+webmethods_install_sum_descriptor:
+  target_install_dir: "{{ webmethods_install_sum_dir }}"
+  installer_path: "{{ webmethods_install_common_repo_dir }}/softwareagupdatemanager-linux.bin"
+  binaries_image_path: "{{ webmethods_install_common_repo_dir }}/sum_image.zip"
+  force_install: false
+  clean_after_install: false
+
+################### post install settings
+
+webmethods_postinstall_wm_builtin: true
+webmethods_postinstall_scriptfiles:
+  - "{{ webmethods_install_dir }}/bin/afterInstallAsRoot.sh"
+
+##################### default open ports based on products
+
+sys_open_ports_spm_all: "{{ sys_open_ports_spm }} + {{ sys_open_ports_spm_ssl }}"
+sys_open_ports_spm: ["8092/tcp"]
+sys_open_ports_spm_ssl: ["8093/tcp"]
+
+sys_open_ports_cce_all: "{{ sys_open_ports_cce }} + {{ sys_open_ports_cce_ssl }}"
+sys_open_ports_cce: ["8090/tcp"]
+sys_open_ports_cce_ssl: ["8091/tcp"]
+
+sys_open_ports_deployer_all: "{{ sys_open_ports_deployer }} + {{ sys_open_ports_deployer_ssl }}"
+sys_open_ports_deployer: ["5555/tcp","9999/tcp"]
+sys_open_ports_deployer_ssl: ["5543/tcp","9999/tcp"]
+
+sys_open_ports_abe_all: "{{ sys_open_ports_abe }}"
+sys_open_ports_abe: []
+
+sys_open_ports_dbc_all: "{{ sys_open_ports_dbc }}"
+sys_open_ports_dbc: []
+
+sys_open_ports_integrationserver_all: "{{ sys_open_ports_integrationserver }} + {{ sys_open_ports_integrationserver_ssl }}"
+sys_open_ports_integrationserver: ["5555/tcp","9999/tcp"]
+sys_open_ports_integrationserver_ssl: ["5543/tcp","9999/tcp"]
+
+sys_open_ports_internaldatastore_all: "{{ sys_open_ports_internaldatastore }} + {{ sys_open_ports_internaldatastore_ssl }}"
+sys_open_ports_internaldatastore: ["9240/tcp","9340/tcp"]
+sys_open_ports_internaldatastore_ssl: []
+
+sys_open_ports_apigateway_all: "{{ sys_open_ports_apigateway }} + {{ sys_open_ports_apigateway_ssl }} + {{ sys_open_ports_apigateway_ignite_discovery_ports }} + {{ sys_open_ports_apigateway_ignite_comm_ports }}"
+sys_open_ports_apigateway: ["9072/tcp","5555/tcp","9999/tcp"]
+sys_open_ports_apigateway_ssl: ["9073/tcp","5543/tcp","9999/tcp"]
+sys_open_ports_apigateway_ignite_discovery_ports: ["47100/tcp","47101/tcp","47102/tcp","47103/tcp","47104/tcp","47105/tcp","47106/tcp","47107/tcp","47108/tcp","47109/tcp","47110/tcp"]
+sys_open_ports_apigateway_ignite_comm_ports: ["47500/tcp","47501/tcp","47502/tcp","47503/tcp","47504/tcp","47505/tcp","47506/tcp","47507/tcp","47508/tcp","47509/tcp","47510/tcp"]
+
+sys_open_ports_apigatewaykibana_all: "{{ sys_open_ports_apigatewaykibana }} + {{ sys_open_ports_apigatewaykibana_ssl }}"
+sys_open_ports_apigatewaykibana: ["9405/tcp"]
+sys_open_ports_apigatewaykibana_ssl: []
+
+sys_open_ports_terracotta_all: "{{ sys_open_ports_terracotta }} + {{ sys_open_ports_terracotta_ssl }}"
+sys_open_ports_terracotta: ["9510/tcp","9520/tcp","9530/tcp","9540/tcp"]
+## Note: make sure this list is in-line with the property l1.healthcheck.l2.bindPort on terracotta nodes
+sys_open_ports_terracotta_client_healthcheck_callbacks: ["9501/tcp","9502/tcp","9503/tcp","9504/tcp","9505/tcp"]
+sys_open_ports_terracotta_ssl: []
+
+sys_open_ports_apiportal_all: "{{ sys_open_ports_apiportal }} + {{ sys_open_ports_apiportal_ssl }}"
+sys_open_ports_apiportal: ["18101/tcp","18102/tcp","18011/tcp"]
+sys_open_ports_apiportal_ssl: []
+
+sys_open_ports_devportal_all: "{{ sys_open_ports_devportal }} + {{ sys_open_ports_devportal_ssl }} + {{ sys_open_ports_devportal_ignite_discovery_ports }} + {{ sys_open_ports_devportal_ignite_comm_ports }}"
+sys_open_ports_devportal: ["18101/tcp"]
+sys_open_ports_devportal_ssl: ["18102/tcp"]
+sys_open_ports_devportal_ignite_discovery_ports: ["47100/tcp","47101/tcp","47102/tcp","47103/tcp","47104/tcp","47105/tcp","47106/tcp","47107/tcp","47108/tcp","47109/tcp","47110/tcp"]
+sys_open_ports_devportal_ignite_comm_ports: ["47500/tcp","47501/tcp","47502/tcp","47503/tcp","47504/tcp","47505/tcp","47506/tcp","47507/tcp","47508/tcp","47509/tcp","47510/tcp"]
+
+sys_open_ports_centrasite_all: "{{ sys_open_ports_centrasite }} + {{ sys_open_ports_centrasite_ssl }}"
+sys_open_ports_centrasite: ["53307/tcp", "53308/tcp", "53313/tcp"]
+sys_open_ports_centrasite_ssl: []
+
+sys_open_ports_connx_all: "{{ sys_open_ports_connx }} + {{ sys_open_ports_connx_ssl }}"
+sys_open_ports_connx: ["7500/tcp","7501/tcp","7502/tcp"]
+sys_open_ports_connx_ssl: []
+
+sys_open_ports_applinx_all: "{{ sys_open_ports_applinx }} + {{ sys_open_ports_applinx_ssl }}"
+sys_open_ports_applinx: ["2309/tcp", "2380/tcp", "2305/tcp", "2323/tcp", "23443/tcp"]
+sys_open_ports_applinx_ssl: []
+
+## these are: client ports, inter-realm ports, and jmx ports
+sys_open_ports_universalmessaging_all: "{{ sys_open_ports_universalmessaging }} + {{ sys_open_ports_universalmessaging_ssl }}"
+sys_open_ports_universalmessaging: ["9000/tcp","9001/tcp","9002/tcp","9003/tcp","9004/tcp","9005/tcp","8888/tcp","9999/tcp","9988/tcp"]
+sys_open_ports_universalmessaging_ssl: []
+
+sys_open_ports_mws_all: "{{ sys_open_ports_mws }} + {{ sys_open_ports_mws_ssl }}"
+sys_open_ports_mws: ["8585/tcp","8586/tcp","8587/tcp"]
+sys_open_ports_mws_ssl: []
+
+## OS settings
+sys_open_ports: "{{ sys_open_ports_spm }}"
+limits_user: "{{ webmethods_user }}"
+
+## some default sysprep values -- will be overriden by other groups
+limits_openfiles: "32000"
+limits_processes: "5000"
+
+sysctl_config:
+  fs.file-max: "{{ limits_openfiles }}"
+
+limits_configs:
+  - domain: "{{ limits_user }}"
+    type: soft
+    item: nofile
+    value: "{{ limits_openfiles }}"
+    comment: 'the max file descriptor'
+  - domain: "{{ limits_user }}"
+    type: hard
+    item: nofile
+    value: "{{ limits_openfiles }}"
+    comment: 'the max file descriptor'
+  - domain: "{{ limits_user }}"
+    type: soft
+    item: nproc
+    value: "{{ limits_processes }}"
+    comment: 'the max process limit'
+  - domain: "{{ limits_user }}"
+    type: hard
+    item: nproc
+    value: "{{ limits_processes }}"
+    comment: 'the max process limit'

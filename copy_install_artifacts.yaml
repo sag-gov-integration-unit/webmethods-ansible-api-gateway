@@ -1,0 +1,7 @@
+---
+
+- import_playbook: copy_install_artifacts_s3.yaml
+  when: artifacts_copy_type == 's3'
+
+- import_playbook: copy_install_artifacts_ssh.yaml
+  when: artifacts_copy_type == 'rsync'

@@ -1,0 +1,45 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+################################################################
+## playbook content
+################################################################
+
+- name: Updating the product licenses
+  hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+
+    - name: Set changed flag to false if not defined
+      set_fact:
+        configure_licenses_changed: false
+      when: configure_licenses_changed is not defined
+
+    - name: Downloading the licenses and copy them to appropriate target
+      import_role: 
+        name: aws-wrapper
+      vars:
+        command: get-files-from-s3
+        getfroms3_files_descriptor_list: "{{ webmethods_install_product_license_descriptor_list_s3 }}"
+      when: artifacts_copy_type == 's3'
+
+    - name: Set changed flag to true if any mutating operation did change
+      set_fact:
+        configure_licenses_changed: true
+      when: >
+        aws_wrapper_get_files_from_s3_changed | default(false,true) | bool
+
+    - debug: var=configure_licenses_changed verbosity=2

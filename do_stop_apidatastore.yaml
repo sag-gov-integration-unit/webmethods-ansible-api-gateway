@@ -1,0 +1,5 @@
+---
+
+- import_playbook: common_webmethods_stop.yaml
+  vars:
+    inventory_hosts_pattern: apidatastore

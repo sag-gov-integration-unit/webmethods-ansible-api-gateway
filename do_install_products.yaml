@@ -1,0 +1,92 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: all_webmethods:&all_linux
+    filter_unreachable_result_host_group: all_linux_webmethods_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+
+############################
+## Install products
+############################
+
+## make sure products are not running (ie. re-install)
+- name: stop command using native or services
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    command_action: stop
+    command_type: raw
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+    ignore_script_notfound: true
+    ignore_service_notfound: true
+
+## copy install artifacts
+- import_playbook: copy_install_artifacts.yaml
+
+## actual install
+- hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+  
+    - name: install the products
+      import_role:
+        name: provision-with-installer
+      vars:
+        rvar_install_products_descriptor_list: "{{ webmethods_install_products_descriptor_list }}"
+
+####################################################################################
+## wM post-installs
+####################################################################################
+
+- name: wM post-install as root task (run as root tasks)
+  hosts: all_linux_webmethods_filtered_hosts
+  become: true
+  tasks:
+    - name: Print the params for the common-webmethods-postinstall tasks
+      debug:
+        msg:
+          - "webmethods_postinstall_wm_builtin = {{ webmethods_postinstall_wm_builtin | default('undefined') }}"
+          - "webmethods_postinstall_scriptfiles = {{ webmethods_postinstall_scriptfiles | default(['undefined']) | join(',') }}"
+        verbosity: 1
+
+    - name: running the webMethods post install scripts
+      include_role:
+        name: post-install-webmethods
+      vars:
+        postinstall_scriptfile: "{{ outer_item }}"
+      with_items: "{{ webmethods_postinstall_scriptfiles }}"
+      loop_control:
+        loop_var: outer_item
+      when: webmethods_postinstall_wm_builtin|bool == true and webmethods_postinstall_scriptfiles is defined and (webmethods_postinstall_scriptfiles|length > 0)
+
+################################################################
+## make sure products are not running at the end
+################################################################
+
+## stop spm
+- name: stop the SPM process started outside of systemd
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+    ignore_service_notfound: true
+    command_action: stop
+    command_type: raw
+    webmethods_product_list:
+      - product_name: "spm"
+
+## stop products
+- name: stop the processes using raw commands in case the patch process started any process outside systemd
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: all_linux_webmethods_filtered_hosts
+    ignore_service_notfound: true
+    command_action: stop
+    command_type: raw
