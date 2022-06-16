@@ -3,12 +3,12 @@
 [all_linux:children]
 apigateway
 apidatastore
-terracotta
+devportal
 
 [all_webmethods:children]
 apigateway
 apidatastore
-terracotta
+devportal
 
 ########################################### functions profiles
 
@@ -25,11 +25,8 @@ apidatastore_coord
 [profile_apigateway:children]
 apigateway
 
-[profile_apiportal:children]
-apiportal
-
-[profile_terracotta:children]
-terracotta
+[profile_devportal:children]
+devportal
 
 ########################################### servers
 
@@ -47,9 +44,6 @@ apidatastore_coord_1 ansible_host=apids1.apimgt.local
 apidatastore_coord_2 ansible_host=apids2.apimgt.local
 apidatastore_coord_3 ansible_host=apids3.apimgt.local
 
-[apiportal]
-apiportal_1 ansible_host=apipt1.apimgt.local
-
-[terracotta]
-terracotta_1 ansible_host=terracotta1.apimgt.local
-terracotta_2 ansible_host=terracotta2.apimgt.local
+[devportal]
+devportal_1 ansible_host=devportal1.apim.sedemos.saggs.local
+devportal_2 ansible_host=devportal2.apim.sedemos.saggs.local

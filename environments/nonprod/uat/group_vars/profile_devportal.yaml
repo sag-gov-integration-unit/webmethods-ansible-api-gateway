@@ -1,0 +1,12 @@
+---
+
+################### runtime setup
+
+webmethods_runtime_mem_min: 1024
+webmethods_runtime_mem_max: 2048
+webmethods_runtime_params:
+  wrapper.java.additional.5000: "-DIGNITE_QUIET=true"
+
+webmethods_devportal_external_loadbalancer_url: http://somelb:18101/portal
+webmethods_devportal_external_elastic_port: "9240"
+webmethods_devportal_clustering_ignite_port: "47500..47509"

@@ -1,8 +1,0 @@
----
-
-################### runtime params
-
-webmethods_runtime_mem_min: 4096
-webmethods_runtime_mem_max: 4096
-webmethods_runtime_params:
-  wrapper.java.additional.500: "-XX:+DisableExplicitGC"

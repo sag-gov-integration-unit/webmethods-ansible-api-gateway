@@ -9,7 +9,7 @@ webmethods_groupid: 1724
 
 ##################### versions to install (needed for the services)
 product_version_major: 10
-product_version_minor: 7
+product_version_minor: 11
 product_version_full: "{{ product_version_major }}{{ product_version_minor }}"
 product_version_full_withdot: "{{ product_version_major }}.{{ product_version_minor }}"
 

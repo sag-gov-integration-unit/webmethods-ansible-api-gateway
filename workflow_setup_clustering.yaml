@@ -2,5 +2,5 @@
 
 # setup clustering
 - import_playbook: configure_apidatastore_clustering.yaml
-- import_playbook: configure_terracotta_clustering.yaml
+- import_playbook: configure_devportal_clustering.yaml
 - import_playbook: configure_apigateway_clustering.yaml

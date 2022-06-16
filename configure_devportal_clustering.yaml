@@ -1,0 +1,73 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: devportal
+    filter_unreachable_result_host_group: devportal_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: devportal_filtered_hosts
+
+################################################################
+## clustering
+################################################################
+
+- name: Devportal clustering
+  hosts: devportal_filtered_hosts
+  become: true
+  become_user: "{{ webmethods_user }}"
+  tasks:
+
+    - name: Set changed flag to false if not defined
+      set_fact: 
+        configure_devportal_clustering_changed: false
+      when: configure_devportal_clustering_changed is not defined
+
+    ## get the hosts of the elasticsearch in the format that's expected
+    - import_role: 
+        name: get-inventory-hosts
+      vars:
+        inventory_pattern: apidatastore
+        inventory_hosts_property: "ansible_host"
+        inventory_hosts_clear_first: true
+        inventory_hosts_add_prefix: "http://"
+        inventory_hosts_add_suffix: ":{{ webmethods_devportal_external_elastic_port }}"
+    
+    - set_fact:
+        _elasticsearch_uris_list: "{{ output_inventory_hosts }}"
+
+    - import_role:
+        name: developerportal-files-configurator
+      vars:
+        configs_action: set-elasticsearch-uris
+        rvars_devportal_elasticsearch_uris: "{{ _elasticsearch_uris_list }}"
+
+    ## get the hosts of the devportals in the format that's expected
+    - import_role: 
+        name: get-inventory-hosts
+      vars:
+        inventory_pattern: devportal
+        inventory_hosts_property: "ansible_host"
+        inventory_hosts_clear_first: true
+        inventory_hosts_add_prefix: ""
+        inventory_hosts_add_suffix: ":{{ webmethods_devportal_clustering_ignite_port }}"
+    
+    - set_fact:
+        _devportal_clustering_peers_list: "{{ output_inventory_hosts }}"
+
+    - import_role:
+        name: developerportal-files-configurator
+      vars:
+        configs_action: set-clustering-peers
+        rvars_devportal_clustering_peers: "{{ _devportal_clustering_peers_list }}"
+
+    - import_role:
+        name: developerportal-files-configurator
+      vars:
+        configs_action: set-loadbalancer-url
+        rvars_devportal_loadbalancer_url: "{{ webmethods_devportal_external_loadbalancer_url }}"

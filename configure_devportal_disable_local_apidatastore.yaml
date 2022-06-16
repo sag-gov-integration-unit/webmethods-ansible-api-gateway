@@ -1,0 +1,38 @@
+---
+
+################################################################
+## Playbook Preps
+################################################################
+
+- import_playbook: common_playbook_preps_filter_unreachable.yaml
+  vars:
+    filter_unreachable_hosts_pattern: devportal
+    filter_unreachable_result_host_group: devportal_filtered_hosts
+
+- import_playbook: common_playbook_preps_load_vars.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: devportal_filtered_hosts
+    
+################################################################
+## stop spm
+################################################################
+
+- name: stop the IDS process started outside of systemd (ie. by install)
+  import_playbook: common-webmethods-command.yaml
+  vars:
+    webmethods_inventory_hosts_pattern: devportal_filtered_hosts
+    command_action: stop
+    command_type: raw
+    webmethods_product_list:
+      - product_name: "internaldatastore"
+
+- hosts: devportal_filtered_hosts
+  become: true
+  tasks:
+    - name: Deleting the systemd services
+      include_role:
+        name: service-webmethods
+      vars:
+        product_command: "delete"
+        product_name: "internaldatastore"
+        ignore_service_notfound: true
