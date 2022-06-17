@@ -1,5 +1,5 @@
 ---
 
 - import_playbook: do_stop_apigateway.yaml
-- import_playbook: configure_apigateway_clustering_peering.yaml
+- import_playbook: configure_apigateway_clustering_with_terracotta.yaml
 - import_playbook: do_start_apigateway.yaml
