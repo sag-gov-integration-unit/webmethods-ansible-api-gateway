@@ -3,8 +3,13 @@ webmethods-ansible-api-gateway
 
 A starter project to automate with Ansible the tasks related to APIGateway platform
 
-This project makes use of various common Ansible roles available at [github.com/SoftwareAG](https://github.com/SoftwareAG) (search for "ansible")
-For more details, go to [Preparation Steps](./README_Preps.md)
+This project makes use of various common Ansible roles available at [github.com/SoftwareAG](https://github.com/SoftwareAG), mainly:
+- [sagdevops-ansible-common](https://github.com/SoftwareAG/sagdevops-ansible-common.git)
+- [sagdevops-ansible-common-webmethods](https://github.com/SoftwareAG/sagdevops-ansible-common-webmethods.git)
+- [sagdevops-ansible-apigateway](https://github.com/SoftwareAG/sagdevops-ansible-apigateway.git)
+- [sagdevops-ansible-developer-portal](https://github.com/SoftwareAG/sagdevops-ansible-developer-portal.git)
+- [sagdevops-ansible-apiportal](https://github.com/SoftwareAG/sagdevops-ansible-apiportal.git)
+- [sagdevops-ansible-apidatastore](https://github.com/SoftwareAG/sagdevops-ansible-apidatastore.git)
 
 Authors
 --------------------------------------------
