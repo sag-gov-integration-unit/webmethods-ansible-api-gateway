@@ -31,7 +31,6 @@ webmethods_watt_params:
 ## extended settings - apigateway settings (note: this are replicated in the cluster)
 vars_webmethods_apigateway_extended_settings_coregateway_extended_keys:
 
-
 ################### elastic comms
 
 webmethods_elastic_comms_proto: http
